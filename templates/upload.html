@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Separar svg</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #f0f0f0;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            transition: width 0.3s ease-in-out;
+        }
+        #download-link {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        #download-link:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Subir Archivo SVG</h1>
+    
+    <div id="message"></div>
+    
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".svg">
+        <input type="submit" value="Subir y Procesar SVG">
+    </form>
+
+    <div class="progress-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <a href="#" id="download-link" style="display: none;">Descargar SVG Procesado</a>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const messageDiv = document.getElementById('message');
+            const downloadLink = document.getElementById('download-link');
+            
+            // Mostrar barra de progreso
+            progressContainer.style.display = 'block';
+            messageDiv.innerHTML = '';
+            downloadLink.style.display = 'none';
+            
+            // Simular progreso
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += 10;
+                    progressBar.style.width = progress + '%';
+                }
+            }, 500);
+
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    
+                    if (data.error) {
+                        messageDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                    } else {
+                        messageDiv.innerHTML = `<p class="success">${data.message}</p>`;
+                        downloadLink.href = data.download_url;
+                        downloadLink.style.display = 'inline-block';
+                    }
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                progressContainer.style.display = 'none';
+                messageDiv.innerHTML = `<p class="error">Error al procesar el archivo: ${error}</p>`;
+            });
+        });
+    </script>
+    
+</body>    
+</html>
